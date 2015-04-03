@@ -76,13 +76,13 @@ http://docker.io"
 
   (os-family
     [node]
-    (:os-family ((.image_meta (node/compute-service node))
-                 (inspect :Image))))
+    (:os-family (get (.image_meta (node/compute-service node))
+                     (:Image inspect))))
 
   (os-version
     [node]
-    (:os-version ((.image_meta (node/compute-service node))
-                  (inspect :Image))))
+    (:os-version (get (.image_meta (node/compute-service node))
+                      (:Image inspect))))
 
   (running?
     [_]
@@ -101,11 +101,11 @@ http://docker.io"
     nil)
   pallet.node.NodeImage
   (image-user [node]
-    (debugf "image-user for %s" (inspect :Image))
+    (debugf "image-user for %s" (:Image inspect))
     (or
      (select-keys
-      ((.image_meta (node/compute-service node))
-       (inspect :Image))
+      (get (.image_meta (node/compute-service node))
+           (:Image inspect))
       [:username :password :private-key :public-key
        :private-key-path :public-key-path])
      {:username (let [u (-> inspect :Config :User)]
@@ -115,7 +115,7 @@ http://docker.io"
   pallet.node.NodeProxy
   (proxy [node]
       {:host (node/primary-ip (.host_node service))
-       :port (if-let [p (-> inspect :NetworkSettings :PortMapping :22)]
+       :port (if-let [p (-> inspect :NetworkSettings :Ports :22/tcp first :HostPort)]
                (if-not (blank? p) (Integer/parseInt p)))}))
 
 (defn- nil-if-blank [x]
@@ -273,7 +273,7 @@ http://docker.io"
 (defn- script-output
   [result]
   (let [{:keys [error exit out]} result]
-    (when-not (zero? exit)
+    (when-not (= 0 exit)
       (throw (ex-info "Command failed" result)))
     out))
 
@@ -297,7 +297,7 @@ http://docker.io"
                     [(plan-fn (docker/run image-id cmd options))]
                     :user host-user)
         {:keys [error exit out]} (-> results last :result last)]
-    (when (zero? exit)
+    (when (= 0 exit)
       (let [node (DockerNode. out group-name compute-service)]
         (node/tag! node :pallet/group-name group-name)
         (when bootstrapped
@@ -327,7 +327,7 @@ http://docker.io"
                     [(plan-fn (docker/kill (node/id node)))]
                     :user host-user)
         {:keys [error exit out]} (-> results last :result last)]
-    (when-not (zero? exit)
+    (when-not (= 0 exit)
       (throw (ex-info (str "Removing " (node/id node) " failed"))))))
 
 (defn nodes
@@ -347,7 +347,7 @@ http://docker.io"
     (when-let [e (:cause error)]
       (clojure.stacktrace/print-stack-trace e))
     (tracef "results %s" (vec results))
-    (when (zero? exit)
+    (when (= 0 exit)
       (map inspect->node out))))
 
 (defn commit
@@ -361,7 +361,7 @@ http://docker.io"
     (when-let [e (:cause error)]
       (clojure.stacktrace/print-stack-trace e))
     (tracef "results %s" (vec results))
-    (if (zero? exit)
+    (if (= 0 exit)
       (trim out)
       (throw (ex-info (str "Commit image " (pallet.node/id node) " failed")
                       {:node (pallet.node/id node)})))))

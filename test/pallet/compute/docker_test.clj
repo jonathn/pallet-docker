@@ -110,7 +110,7 @@
                (let [[image-id port] (image-container docker)
                      node (run-httpd docker image-id port)
                      local-port (if-let [p (-> (.inspect node) :NetworkSettings
-                                               :PortMapping :80)]
+                                               :Ports :80/tcp first :HostPort)]
                                   (if-not (blank? p) (Integer/parseInt p)))
                      _ (debugf "node is %s" (.inspect node))
                      url (str "http://localhost:" local-port "/abc")
