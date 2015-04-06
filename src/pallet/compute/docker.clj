@@ -96,7 +96,7 @@ http://docker.io"
   (terminated? [_]
     (not (-> inspect :State :Running)))
 
-  (id [_] (-> inspect :ID))
+  (id [_] (-> inspect :Id))
   (compute-service [_] service)
   pallet.node.NodePackager
   (packager [node]
@@ -132,6 +132,14 @@ http://docker.io"
 
 (defn- current-time-millis []
   (System/currentTimeMillis))
+
+(defn user->credentials
+  [user]
+  (->>
+   (select-keys user [:username :password :passphrase :private-key
+                      :private-key-path :public-key :public-key-path])
+   (filter second)
+   (into {})))
 
 (defn- adjust-network-config
   "Adjusts the container configuration to use the specified network
@@ -269,7 +277,8 @@ http://docker.io"
   (jump-hosts [_]
     [{:endpoint
       {:server (node/node-address host-node)
-       :port (node/ssh-port host-node)}}]))
+       :port (node/ssh-port host-node)}
+      :credentials (user->credentials host-user)}]))
 
 ;;; ## Service Implementation
 (defn- host-command
