@@ -211,7 +211,7 @@ http://docker.io"
        compute-service host-node host-user
        group-spec
        (or (-> group-spec :image :init) "/usr/sbin/sshd -D")
-       options
+       (or (-> group-spec :image :docker-options) options)
        node-count)))
 
   (reboot
