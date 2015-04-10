@@ -355,7 +355,9 @@ http://docker.io"
                     :user host-user)
         {:keys [error exit out]} (-> results last :result last)]
     (when-not (= 0 exit)
-      (throw (ex-info (str "Removing " (node/id node) " failed"))))))
+      (throw (ex-info (str "Removing " (node/id node) " failed")
+                      {:node (node/id node)
+                       :results results})))))
 
 (defn nodes
   [compute host-node host-user]
