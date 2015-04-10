@@ -442,7 +442,7 @@ http://docker.io"
 
 ;;;; Compute service SPI
 (defn supported-providers []
-  ["docker"])
+  ["docker-cli"])
 
 (defn docker-service
   [{:keys [node user environment tag-provider image-meta]
@@ -455,7 +455,7 @@ http://docker.io"
       (reset! tag-provider (TagfileNodeTag. service)))
     service))
 
-(defmethod implementation/service :docker
+(defmethod implementation/service :docker-cli
   [_ {:keys [node user environment]
       :as options}]
   (docker-service options))
